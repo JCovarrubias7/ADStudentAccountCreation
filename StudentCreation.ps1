@@ -30,7 +30,7 @@ New-ADUser -Name "$fullName" -SamAccountName "$lowerName" `
  -ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "\\<SERVER>\Students\$gradYr\$lowerName" `
  -OtherAttributes @{mailNickname="$pass"}
 }
-$result.Text += "$fullname account has been created:`nU: $email`nP: $pass `n`n"
+$result.Text += "An account for $fullname has been created:`nU: $email`nP: $pass `n`n"
 }
 
 
@@ -76,16 +76,16 @@ $passValue = $pass -as [Double]
 $passok = $passValue -ne $NULL
 If($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq ""){
 [System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "Missing Values")
-}ElseIf($gradYr -notmatch "[2018,2019,2020,2021,2022,2023,2024,2025]"){
-[System.Windows.Messagebox]::Show("Please enter Graduating year", "Wrong Graduating Year")
 }ElseIf( -not $gradok){
-[System.Windows.Messagebox]::Show("Please enter a numeric value", "Numeric Value")
+[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "Graduation Numeric Value Error")
 }ElseIf($gradYr.length -notmatch 4){
-[System.Windows.Messagebox]::Show("ID must be 4 digits long", "Graduation: Four Digit Value")
+[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "Graduation: Four Digit Value")
+}ElseIf($gradYr -notmatch "[2018,2019,2020,2021,2022,2023,2024,2025]"){
+[System.Windows.Messagebox]::Show("Graduating year outside of scope", "Graduating Year Scope Error")
 }ElseIf( -not $passok){
-[System.Windows.Messagebox]::Show("Please enter a numeric value", "Numeric Value")
+[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ID Numeric Value Error")
 }ElseIf($pass.length -notmatch 5){
-[System.Windows.Messagebox]::Show("ID must be 5 digits long", "ID: Five Digit Value")
+[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ID: Five Digit Value")
 }else{
 Create-User $userF $userL $gradYr $pass
 $userFirst.text=""
