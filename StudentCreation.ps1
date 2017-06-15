@@ -7,6 +7,9 @@ $lowerName = "$userF$userL".ToLower()
 $fullName = "$userF $userL"
 $email = "$lowerName"+"@<DOMAIN>.us"
 $script = "<BATFILE>.bat"
+$OUName = "Class of $gradYr"
+$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
+$homePath = "\\<SERVER>\Students\$gradYr\$lowerName"
 $pwd = ConvertTo-SecureString -String "$pass" -AsPlainText -force
 
 #Checking to see if account exist
@@ -19,15 +22,22 @@ $gradYear.text=""
 $id.text=""
 $result.Text += "An account with the name `"$SAMAccountname`" already exist. `n`n"
 return;
+}ElseIf(@(Get-ADOrganizationalUnit -Filter "Name -like '$OUName'").Count -eq 0){
+[System.Windows.Messagebox]::Show("The OU doesn't exit. Make sure you have the right Graduating Year.", "OU doesn't exists")
+$userFirst.text=""
+$userLast.text=""
+$gradYear.text=""
+$id.text=""
+$result.Text += "Graduating year was outside of scope for `"$SAMAccountname`", please check the year. `n`n"
+return;
 }else{
 #Running command
 New-ADUser -Name "$fullName" -SamAccountName "$lowerName" `
  -GivenName "$userF" -Surname "$userL" -DisplayName "$fullName" -UserPrincipalName "$email" `
- -Path "ou=Class of $gradYr,ou=Students,dc=<DOMAIN>,dc=local" `
- -Enabled $true -AccountPassword $pwd `
+ -Path "$OUPath" -Enabled $true -AccountPassword $pwd `
  -ChangePasswordAtLogon $false -PasswordNeverExpires $true -CannotChangePassword $true `
  -Description "Student$gradYr" -EmailAddress "$email" -Title "Student" -Department "$gradYr" -Company "$pass" `
- -ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "\\<SERVER>\Students\$gradYr\$lowerName" `
+ -ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "$homePath" `
  -OtherAttributes @{mailNickname="$pass"}
 }
 $result.Text += "An account for $fullname has been created:`nU: $email`nP: $pass `n`n"
@@ -80,8 +90,6 @@ If($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq ""){
 [System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "Graduation Numeric Value Error")
 }ElseIf($gradYr.length -notmatch 4){
 [System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "Graduation: Four Digit Value")
-}ElseIf($gradYr -notmatch "[2018,2019,2020,2021,2022,2023,2024,2025]"){
-[System.Windows.Messagebox]::Show("Graduating year outside of scope", "Graduating Year Scope Error")
 }ElseIf( -not $passok){
 [System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ID Numeric Value Error")
 }ElseIf($pass.length -notmatch 5){
