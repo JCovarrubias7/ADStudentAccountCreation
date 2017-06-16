@@ -86,18 +86,18 @@ $create.Add_Click({
 		$gradok = $gradYrValue -ne $NULL
 		$passValue = $pass -as [Double]
 		$passok = $passValue -ne $NULL
-If($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq ""){
-		[System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "ERROR: Missing Values")
-	}ElseIf( -not $gradok){
-		[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "ERROR: Graduation Numeric Value")
-	}ElseIf($gradYr.length -notmatch 4){
-		[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "ERROR: Graduation: Four Digit Value")
-	}ElseIf( -not $passok){
-		[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ERROR: ID Numeric Value")
-	}ElseIf($pass.length -notmatch 5){
-		[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
-	}Else{
-		Create-User $userF $userL $gradYr $pass
-	}
+	If($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq ""){
+			[System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "ERROR: Missing Values")
+		}ElseIf( -not $gradok){
+			[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "ERROR: Graduation Numeric Value")
+		}ElseIf($gradYr.length -notmatch 4){
+			[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "ERROR: Graduation: Four Digit Value")
+		}ElseIf( -not $passok){
+			[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ERROR: ID Numeric Value")
+		}ElseIf($pass.length -notmatch 5){
+			[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
+		}Else{
+			Create-User $userF $userL $gradYr $pass
+		}
 })
 $Win.ShowDialog()
