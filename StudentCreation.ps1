@@ -1,4 +1,22 @@
-﻿#This is done to remove the console window that appears after running the script. The info was found at
+﻿#############################################################################
+# Author  : Jorge E. Covarrubias
+# Website : 
+# LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
+#
+# Version   : 2.0
+# Created   : 9/14/2017
+# Modified  :
+# 11/29/2017  - Adding heading for version tracking.
+#				Removing commented out code.
+# 
+#
+# Purpose : This script will create a GUI to input a students information so it can be created in AD.
+#			Requires. First Name, Last Name, Graduation Year (2018), and Students five digit ID number.
+#			Make sure to change Variables in Create-User Function for your environment.
+#
+#############################################################################
+
+#This is done to remove the console window that appears after running the script. The info was found at
 # https://stackoverflow.com/questions/1802127/how-to-run-a-powershell-script-without-displaying-a-window
 $t = '[DllImport("user32.dll")] public static extern bool ShowWindow(int handle, int state);'
 add-type -name win -member $t -namespace native
@@ -62,14 +80,6 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 		} 
 		New-ADUser @ADUserArguments
 		
-		# New-ADUser -Name "$fullName" -SamAccountName "$lowerName" `
-		# -GivenName "$userF" -Surname "$userL" -DisplayName "$fullName" -UserPrincipalName "$email" `
-		# -Path "$OUPath" -Enabled $true -AccountPassword $pwd `
-		# -ChangePasswordAtLogon $false -PasswordNeverExpires $true -CannotChangePassword $true `
-		# -Description "Student$gradYr" -EmailAddress "$email" -Title "Student" -Department "$gradYr" -Company "$pass" `
-		# -ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "$homePath" `
-		# -OtherAttributes @{mailNickname="$pass"}
-
 		$result.Text += "An account for $fullname has been successfully created:`nU: $email`nP: $pass `n`n"
 		Clear-Fields
 	}
