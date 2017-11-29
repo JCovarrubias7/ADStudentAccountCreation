@@ -1,4 +1,10 @@
-﻿#This line adds the .Net Framework WPF to Powershell that makes the GUI work
+﻿#This is done to remove the console window that appears after running the script. The info was found at
+# https://stackoverflow.com/questions/1802127/how-to-run-a-powershell-script-without-displaying-a-window
+$t = '[DllImport("user32.dll")] public static extern bool ShowWindow(int handle, int state);'
+add-type -name win -member $t -namespace native
+[native.win]::ShowWindow(([System.Diagnostics.Process]::GetCurrentProcess() | Get-Process).MainWindowHandle, 0)
+
+#This line adds the .Net Framework WPF to Powershell that makes the GUI work
 Add-Type -AssemblyName PresentationFramework
 
 #Clear field Function
@@ -32,13 +38,37 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 		$gradYear.text=""
 	}Else{
 #Running command
-		New-ADUser -Name "$fullName" -SamAccountName "$lowerName" `
-		-GivenName "$userF" -Surname "$userL" -DisplayName "$fullName" -UserPrincipalName "$email" `
-		-Path "$OUPath" -Enabled $true -AccountPassword $pwd `
-		-ChangePasswordAtLogon $false -PasswordNeverExpires $true -CannotChangePassword $true `
-		-Description "Student$gradYr" -EmailAddress "$email" -Title "Student" -Department "$gradYr" -Company "$pass" `
-		-ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "$homePath" `
-		-OtherAttributes @{mailNickname="$pass"}
+		$ADUserArguments = @{ Name = "$fullName";
+			SamAccountName = "$lowerName";
+			GivenName = "$userF";
+			Surname = "$userL";
+			DisplayName = "$fullName";
+			UserPrincipalName = "$email";
+			Path = "$OUPath";
+			Enabled = $True ;
+			AccountPassword = $pwd;
+			ChangePasswordAtLogon = $False ;
+			PasswordNeverExpires = $True ;
+			CannotChangePassword = $True ;
+			Description = "Student$gradYr";
+			EmailAddress = "$email";
+			Title = "Student";
+			Department = "$gradYr";
+			Company = "$pass";
+			ScriptPath = "$gradYr$Script";
+			HomeDrive = "H:";
+			HomeDirectory = "$homePath";
+			OtherAttributes = @{mailNickname = "$pass"}
+		} 
+		New-ADUser @ADUserArguments
+		
+		# New-ADUser -Name "$fullName" -SamAccountName "$lowerName" `
+		# -GivenName "$userF" -Surname "$userL" -DisplayName "$fullName" -UserPrincipalName "$email" `
+		# -Path "$OUPath" -Enabled $true -AccountPassword $pwd `
+		# -ChangePasswordAtLogon $false -PasswordNeverExpires $true -CannotChangePassword $true `
+		# -Description "Student$gradYr" -EmailAddress "$email" -Title "Student" -Department "$gradYr" -Company "$pass" `
+		# -ScriptPath "$gradYr$Script" -HomeDrive "H:" -HomeDirectory "$homePath" `
+		# -OtherAttributes @{mailNickname="$pass"}
 
 		$result.Text += "An account for $fullname has been successfully created:`nU: $email`nP: $pass `n`n"
 		Clear-Fields
