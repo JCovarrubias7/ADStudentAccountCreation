@@ -16,3 +16,5 @@ This is a simple powershell script that will take your user input and create and
 .ID Number
 	The students ID Number (used for password)
 	Must be 5 number characters long
+	
+![](Images/ADAccountCreation.png)
