@@ -3,9 +3,12 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 2.0
+# Version   : 3.0
 # Created   : 9/14/2017
 # Modified  :
+# 8/18/2021   - Removing placing the password in the Company field.
+#			  - Remove Homepath information when creating user account.
+#			  - Adding a CSV Upload function for multiple users.
 # 11/29/2017  - Adding heading for version tracking.
 #				Removing commented out code.
 # 
@@ -34,16 +37,14 @@ Function Clear-Fields(){
 }
 
 #Function being called from the button add_Click with its variables 
-Function Create-User($userF,$userL,$gradYr,$pass){
+Function New-User($userF,$userL,$gradYr,$pass){
 		$lowerName = "$userF$userL".ToLower()
 		$SAMAccountname = $lowerName
 		$fullName = "$userF $userL"
 		$email = "$lowerName"+"@<DOMAIN>.us"
-		$script = "<BATFILE>.bat"
 		$OUName = "Class of $gradYr"
 		$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
-		$homePath = "\\<SERVER>\Students\$gradYr\$lowerName"
-		$pwd = ConvertTo-SecureString -String "$pass" -AsPlainText -force
+		$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
 
 #Checking to see if account and OU exist
 If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
@@ -64,7 +65,7 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 			UserPrincipalName = "$email";
 			Path = "$OUPath";
 			Enabled = $True ;
-			AccountPassword = $pwd;
+			AccountPassword = $password;
 			ChangePasswordAtLogon = $False ;
 			PasswordNeverExpires = $True ;
 			CannotChangePassword = $True ;
@@ -72,10 +73,6 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 			EmailAddress = "$email";
 			Title = "Student";
 			Department = "$gradYr";
-			Company = "$pass";
-			ScriptPath = "$gradYr$Script";
-			HomeDrive = "H:";
-			HomeDirectory = "$homePath";
 			OtherAttributes = @{mailNickname = "$pass"}
 		} 
 		New-ADUser @ADUserArguments
@@ -137,7 +134,7 @@ $create.Add_Click({
 		}ElseIf($pass.length -notmatch 5){
 			[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
 		}Else{
-			Create-User $userF $userL $gradYr $pass
+			New-User $userF $userL $gradYr $pass
 		}
 })
 $Win.ShowDialog()
