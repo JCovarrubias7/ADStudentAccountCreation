@@ -3,12 +3,13 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 3.0
+# Version   : 3.1
 # Created   : 9/14/2017
 # Modified  :
+# 8/19/2021   - Add Tab menu to select New User or CSV.
+#			  - Add controls for the CSV tab.
 # 8/18/2021   - Removing placing the password in the Company field.
 #			  - Remove Homepath information when creating user account.
-#			  - Adding a CSV Upload function for multiple users.
 # 11/29/2017  - Adding heading for version tracking.
 #				Removing commented out code.
 # 
@@ -56,7 +57,7 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 		$result.Text += "---ERROR---`nThe OU doesn't exit. Make sure the OU exist or the graduating year is correct for `"$SAMAccountname`". `n`n"
 		$gradYear.text=""
 	}Else{
-#Running command
+		#Running command
 		$ADUserArguments = @{ Name = "$fullName";
 			SamAccountName = "$lowerName";
 			GivenName = "$userF";
@@ -86,19 +87,39 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 #xml form was created using Visual Studio and then edited here to my liking. This is the GUI
 [xml]$Form = @"
     <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-            Title="AD Student Account Creation" Height="355" Width="355">
+            Title="AD Student Account Creation" Height="405" Width="366">
         <Grid>
-            <Label HorizontalContentAlignment="Center" Content="First Name:" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" VerticalAlignment="Top" Width="100"/>
-            <Label HorizontalContentAlignment="Center" Content="Last Name:" HorizontalAlignment="Left" Height="23" Margin="10,40,0,0" VerticalAlignment="Top" Width="100"/>
-            <Label HorizontalContentAlignment="Center" Content="Graduating Year:" HorizontalAlignment="Left" Height="30" Margin="10,70,0,0" VerticalAlignment="Top" Width="100"/>
-            <Label HorizontalContentAlignment="Center" Content="ID Number:" HorizontalAlignment="Left" Height="23" Margin="10,100,0,0" VerticalAlignment="Top" Width="100"/>
-            <TextBox Name="FirstName" HorizontalAlignment="Left" Height="23" Margin="115,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="217"/>
-            <TextBox Name="LastName" HorizontalAlignment="Left" Height="23" Margin="115,40,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="217"/>
-            <TextBox Name="GraduatingYear" HorizontalAlignment="Left" Height="23" Margin="115,70,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="217"/>
-            <TextBox Name="IDNumber" HorizontalAlignment="Left" Height="23" Margin="115,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="217"/>
-            <TextBox Name="Results" HorizontalAlignment="Left" Height="142" Margin="10,130,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="322"/>
-            <Button Name="CreateAccount" Content="Create Account" HorizontalAlignment="Left" Height="25" Margin="10,284,0,0" VerticalAlignment="Top" Width="322"/>
-        </Grid>
+			<Grid>
+				<TabControl HorizontalAlignment="Left" Height="195" Margin="10,5,0,0" VerticalAlignment="Top" Width="330">
+					<TabItem Header="New User">
+						<Grid Background="#FFE5E5E5">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="53*"/>
+								<ColumnDefinition Width="109*"/>
+							</Grid.ColumnDefinitions>
+							<Label HorizontalContentAlignment="Center" Content="First Name:" HorizontalAlignment="Left" Height="25" Margin="5,10,0,0" VerticalAlignment="Top" Width="100"/>
+							<Label HorizontalContentAlignment="Center" Content="Last Name:" HorizontalAlignment="Left" Height="25" Margin="5,40,0,0" VerticalAlignment="Top" Width="100"/>
+							<Label HorizontalContentAlignment="Center" Content="Graduating Year:" HorizontalAlignment="Left" Height="30" Margin="5,70,0,0" VerticalAlignment="Top" Width="100"/>
+							<Label HorizontalContentAlignment="Center" Content="ID Number:" HorizontalAlignment="Left" Height="25" Margin="5,100,0,0" VerticalAlignment="Top" Width="100"/>
+							<TextBox Name="FirstName" HorizontalAlignment="Left" Height="25" Margin="4,10,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="204" Grid.Column="1"/>
+							<TextBox Name="LastName" HorizontalAlignment="Left" Height="25" Margin="4,40,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="204" Grid.Column="1"/>
+							<TextBox Name="GraduatingYear" HorizontalAlignment="Left" Height="25" Margin="4,70,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="204" Grid.Column="1"/>
+							<TextBox Name="IDNumber" HorizontalAlignment="Left" Height="25" Margin="4,100,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="204" Grid.Column="1"/>
+							<Button Name="CreateAccount" Content="Create New Student Account" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304" Grid.ColumnSpan="2"/>
+						</Grid>
+					</TabItem>
+					<TabItem Header="CSV Upload">
+						<Grid Background="#FFE5E5E5">
+							<Button Name="CSVStartButton" Content="Create CSV Accounts" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304"/>
+							<TextBlock HorizontalAlignment="Left" Height="56" Margin="10,10,0,0" TextAlignment="Center" TextWrapping="Wrap" Text="Select CSV File. &#x0a;Header Row should include: &#x0a;FirstName, LastName, GraduatingYear, IDNumber" VerticalAlignment="Top" Width="304"/>
+							<Button Name="BrowseButton" Content="Browse" HorizontalAlignment="Left" Height="25" Margin="10,88,0,0" VerticalAlignment="Top" Width="86"/>
+							<TextBox HorizontalAlignment="Left" Height="25" Margin="101,88,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="213"/>
+						</Grid>
+					</TabItem>
+				</TabControl>
+				<TextBox Name="Results" HorizontalAlignment="Left" Height="154" Margin="10,205,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="330" VerticalScrollBarVisibility="Visible"/>
+			</Grid>
+        </Grid>  
     </Window>
 "@
 #The NodeReader will grab the form, read it, and the Win will load the form from NR
