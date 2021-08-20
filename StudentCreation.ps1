@@ -3,9 +3,11 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 3.1
+# Version   : 3.2
 # Created   : 9/14/2017
 # Modified  :
+# 8/20/2021   - Add function to Browse Button and add text to browse text box.
+#			  - Add error for empty CSV file.
 # 8/19/2021   - Add Tab menu to select New User or CSV.
 #			  - Add controls for the CSV tab.
 # 8/18/2021   - Removing placing the password in the Company field.
@@ -29,6 +31,9 @@ add-type -name win -member $t -namespace native
 #This line adds the .Net Framework WPF to Powershell that makes the GUI work
 Add-Type -AssemblyName PresentationFramework
 
+#This line adds the Windows Forms
+Add-Type -AssemblyName System.Windows.Forms
+
 #Clear field Function
 Function Clear-Fields(){
 		$userFirst.text=""
@@ -46,6 +51,11 @@ Function New-User($userF,$userL,$gradYr,$pass){
 		$OUName = "Class of $gradYr"
 		$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
 		$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
+
+#Function called from the button CSVStartButton with the CSV location variable
+Function New-CSV($csvLocation)		{
+
+}
 
 #Checking to see if account and OU exist
 If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
@@ -110,10 +120,10 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
 					</TabItem>
 					<TabItem Header="CSV Upload">
 						<Grid Background="#FFE5E5E5">
-							<Button Name="CSVStartButton" Content="Create CSV Accounts" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304"/>
 							<TextBlock HorizontalAlignment="Left" Height="56" Margin="10,10,0,0" TextAlignment="Center" TextWrapping="Wrap" Text="Select CSV File. &#x0a;Header Row should include: &#x0a;FirstName, LastName, GraduatingYear, IDNumber" VerticalAlignment="Top" Width="304"/>
 							<Button Name="BrowseButton" Content="Browse" HorizontalAlignment="Left" Height="25" Margin="10,88,0,0" VerticalAlignment="Top" Width="86"/>
-							<TextBox HorizontalAlignment="Left" Height="25" Margin="101,88,0,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="213"/>
+							<TextBox Name="CSVFileLocation" HorizontalAlignment="Left" Height="25" Margin="101,88,0,0" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="213"/>
+							<Button Name="CSVStartButton" Content="Create CSV Accounts" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304"/>
 						</Grid>
 					</TabItem>
 				</TabControl>
@@ -134,7 +144,15 @@ $id = $Win.FindName("IDNumber")
 $result = $Win.FindName("Results")
 $create = $Win.FindName("CreateAccount")
 
-#On click, we will take our variables from the GUI, make them into text and run them by the function Create-User
+#Browse Button Variables so they can be called
+$browse = $Win.FindName("BrowseButton")
+#Browse TextBox Variable to set the text
+$browseTextBox = $Win.FindName("CSVFileLocation")
+
+#Variables for the CSV Button of the GUI
+$startCSVButton = $win.FindName("CSVStartButton")
+
+#On click, we will take our variables from the GUI, make them into text and run them by the function New-User
 $create.Add_Click({
 		$userF = $userFirst.Text
 		$userL = $userLast.Text
@@ -157,5 +175,29 @@ $create.Add_Click({
 		}Else{
 			New-User $userF $userL $gradYr $pass
 		}
+})
+
+#On click Browse button, we will browse for the CSV file on the computer
+$browse.Add_Click({
+	$FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+		InitialDirectory = [Environment]::GetFolderPath('Desktop')
+		Filter = 'CSV File (*.csv)|*.csv'
+	}
+	#$FileBrowserHolder = $FileBrowser.ShowDialog()
+	if ($FileBrowser.ShowDialog()) {
+		$browseTextBox.Text = $FileBrowser.Filename
+		$browseTextBox.Focus()
+		$browseTextBox.Select($browseTextBox.Text.Length, 0)
+	}
+})
+
+#On click, we will take the CSV and pass it through the New-CSV Fucntion
+$startCSVButton.Add_Click({
+		$csvLocation = $browseTextBox.Text
+	If($csvLocation -eq ""){
+		[System.Windows.Messagebox]::Show("Please make sure CSV file has been selected", "ERROR: Missing Values")
+	}Else{
+		New-CSV $csvLocation
+	}
 })
 $Win.ShowDialog()
