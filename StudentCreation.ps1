@@ -6,6 +6,8 @@
 # Version   : 3.2
 # Created   : 9/14/2017
 # Modified  :
+# 8/21/2021   - Fix spacing in entire code
+#			  - Fix New-User method to make sure it validatges properly
 # 8/20/2021   - Add function to Browse Button and add text to browse text box.
 #			  - Add error for empty CSV file.
 # 8/19/2021   - Add Tab menu to select New User or CSV.
@@ -35,61 +37,153 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
 #Clear field Function
-Function Clear-Fields(){
-		$userFirst.text=""
-		$userLast.text=""
-		$gradYear.text=""
-		$id.text=""
+Function Clear-Fields() {
+	$userFirst.text = ""
+	$userLast.text = ""
+	$gradYear.text = ""
+	$id.text = ""
+	$browseTextBox.text = ""
 }
 
 #Function being called from the button add_Click with its variables 
-Function New-User($userF,$userL,$gradYr,$pass){
-		$lowerName = "$userF$userL".ToLower()
-		$SAMAccountname = $lowerName
-		$fullName = "$userF $userL"
-		$email = "$lowerName"+"@<DOMAIN>.us"
-		$OUName = "Class of $gradYr"
-		$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
-		$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
+Function New-User($userF, $userL, $gradYr, $pass) {
+	$lowerName = "$userF$userL".ToLower()
+	$SAMAccountname = $lowerName
+	$fullName = "$userF $userL"
+	$email = "$lowerName" + "@<DOMAIN>"
+	$OUName = "Class of $gradYr"
+	$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
+	$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
 
-#Function called from the button CSVStartButton with the CSV location variable
-Function New-CSV($csvLocation)		{
-
-}
-
-#Checking to see if account and OU exist
-If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
+	#Checking to see if account and OU exist
+	If (@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1) {
 		#[System.Windows.Messagebox]::Show("An account with the name `"$SAMAccountname`" already exist. Starting over...", "ERROR: Account exists")
 		$result.Text += "---ERROR---`nAn account with the name `"$SAMAccountname`" already exist. `n`n"
 		Clear-Fields
-	}ElseIf(@(Get-ADOrganizationalUnit -Filter "Name -like '$OUName'").Count -eq 0){
+	}
+	ElseIf (@(Get-ADOrganizationalUnit -Filter "Name -like '$OUName'").Count -eq 0) {
 		#[System.Windows.Messagebox]::Show("The OU doesn't exit. Make sure the OU exist or the graduating year is correct.", "ERROR: OU doesn't exists")
 		$result.Text += "---ERROR---`nThe OU doesn't exit. Make sure the OU exist or the graduating year is correct for `"$SAMAccountname`". `n`n"
-		$gradYear.text=""
-	}Else{
+		$gradYear.text = ""
+	}
+	Else {
 		#Running command
 		$ADUserArguments = @{ Name = "$fullName";
-			SamAccountName = "$lowerName";
-			GivenName = "$userF";
-			Surname = "$userL";
-			DisplayName = "$fullName";
-			UserPrincipalName = "$email";
-			Path = "$OUPath";
-			Enabled = $True ;
-			AccountPassword = $password;
-			ChangePasswordAtLogon = $False ;
-			PasswordNeverExpires = $True ;
-			CannotChangePassword = $True ;
-			Description = "Student$gradYr";
-			EmailAddress = "$email";
-			Title = "Student";
-			Department = "$gradYr";
-			OtherAttributes = @{mailNickname = "$pass"}
+			SamAccountName            = "$lowerName";
+			GivenName                 = "$userF";
+			Surname                   = "$userL";
+			DisplayName               = "$fullName";
+			UserPrincipalName         = "$email";
+			Path                      = "$OUPath";
+			Enabled                   = $True ;
+			AccountPassword           = $password;
+			ChangePasswordAtLogon     = $False ;
+			PasswordNeverExpires      = $True ;
+			CannotChangePassword      = $True ;
+			Description               = "Student$gradYr";
+			EmailAddress              = "$email";
+			Title                     = "Student";
+			Department                = "$gradYr";
+			OtherAttributes           = @{mailNickname = "$pass" }
 		} 
 		New-ADUser @ADUserArguments
 		
 		$result.Text += "An account for $fullname has been successfully created:`nU: $email`nP: $pass `n`n"
 		Clear-Fields
+	}
+}
+
+#Function called from the button CSVStartButton with the CSV location variable
+Function New-CSV($csvLocation) {
+	#Set variable to count succesful account creations
+	$newUsersCreatedCount = 0
+	#Import CSV File 
+	$USERS = Import-Csv -Path $csvLocation
+	$USERS.foreach{
+		#For each line in the csv, set these variables
+		$userF = $_.FirstName
+		$userL = $_.LastName
+		$gradYr = $_.GraduatingYear
+		$pass = $_.IDNumber
+
+		#Validate the CSV Fields, if an error, stop execution of the CSV upload
+		If (Confirm-CSV $userF $userL $gradYr $pass -eq $False) {
+			break
+		}
+		Else {
+			$lowerName = "$userF$userL".ToLower()
+			$SAMAccountname = $lowerName
+			$fullName = "$userF $userL"
+			$email = "$lowerName" + "@<DOMAIN>"
+			$OUName = "Class of $gradYr"
+			$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
+			$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
+
+			#Checking to see if account and OU exist
+			If (@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1) {
+				$result.Text += "---ERROR---`nAn account with the name `"$SAMAccountname`" already exist. `n`n"
+			}
+			ElseIf (@(Get-ADOrganizationalUnit -Filter "Name -like '$OUName'").Count -eq 0) {
+				#[System.Windows.Messagebox]::Show("The OU doesn't exit. Make sure the OU exist or the graduating year is correct.", "ERROR: OU doesn't exists")
+				$result.Text += "---ERROR---`nThe OU doesn't exit. Make sure the OU exist or the graduating year is correct for `"$SAMAccountname`". `n`n"
+			}
+			Else {
+				#Running command
+				$ADUserArguments = @{ Name = "$fullName";
+					SamAccountName            = "$lowerName";
+					GivenName                 = "$userF";
+					Surname                   = "$userL";
+					DisplayName               = "$fullName";
+					UserPrincipalName         = "$email";
+					Path                      = "$OUPath";
+					Enabled                   = $True ;
+					AccountPassword           = $password;
+					ChangePasswordAtLogon     = $False ;
+					PasswordNeverExpires      = $True ;
+					CannotChangePassword      = $True ;
+					Description               = "Student$gradYr";
+					EmailAddress              = "$email";
+					Title                     = "Student";
+					Department                = "$gradYr";
+					OtherAttributes           = @{mailNickname = "$pass" }
+				} 
+				New-ADUser @ADUserArguments
+				#Add to succesful user creation count
+				$newUsersCreatedCount++
+			}
+		}
+	}
+	$result.Text += "A total of " + $newUsersCreatedCount + " new user accounts have been created. `n`n"
+	Clear-Fields
+}
+
+Function Confirm-CSV($userF, $userL, $gradYr, $pass) {
+	$gradYrValue = $gradYr -as [Double]
+	$gradok = $NULL -ne $gradYrValue
+	$passValue = $pass -as [Double]
+	$passok = $NULL -ne $passValue
+	If ($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq "") {
+		[System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "ERROR: Missing Values")
+		return $False
+	}
+	ElseIf ( -not $gradok) {
+		[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "ERROR: Graduation Numeric Value")
+		return $False
+	}
+	ElseIf ($gradYr.length -notmatch 4) {
+		[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "ERROR: Graduation: Four Digit Value")
+		return $False
+	}
+	ElseIf ( -not $passok) {
+		[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ERROR: ID Numeric Value")
+		return $False
+	}
+	ElseIf ($pass.length -notmatch 5) {
+		[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
+		return $False
+	}
+	Else {
+		return $True
 	}
 }
 
@@ -133,8 +227,8 @@ If(@(Get-ADObject -Filter { SAMAccountname -eq $SAMAccountname }).Count -ge 1){
     </Window>
 "@
 #The NodeReader will grab the form, read it, and the Win will load the form from NR
-$NR=(New-Object System.Xml.XmlNodeReader $Form)
-$Win=[Windows.Markup.XamlReader]::Load( $NR )
+$NR = (New-Object System.Xml.XmlNodeReader $Form)
+$Win = [Windows.Markup.XamlReader]::Load( $NR )
 
 #Variables that will take the input form the GUI so they can be called later
 $userFirst = $Win.FindName("FirstName")
@@ -153,7 +247,7 @@ $browseTextBox = $Win.FindName("CSVFileLocation")
 $startCSVButton = $win.FindName("CSVStartButton")
 
 #On click, we will take our variables from the GUI, make them into text and run them by the function New-User
-$create.Add_Click({
+$create.Add_Click( {
 		$userF = $userFirst.Text
 		$userL = $userLast.Text
 		$gradYr = $gradYear.Text
@@ -162,42 +256,48 @@ $create.Add_Click({
 		$gradok = $gradYrValue -ne $NULL
 		$passValue = $pass -as [Double]
 		$passok = $passValue -ne $NULL
-	If($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq ""){
+		If ($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq "") {
 			[System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "ERROR: Missing Values")
-		}ElseIf( -not $gradok){
+		}
+		ElseIf ( -not $gradok) {
 			[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "ERROR: Graduation Numeric Value")
-		}ElseIf($gradYr.length -notmatch 4){
+		}
+		ElseIf ($gradYr.length -notmatch 4) {
 			[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "ERROR: Graduation: Four Digit Value")
-		}ElseIf( -not $passok){
+		}
+		ElseIf ( -not $passok) {
 			[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ERROR: ID Numeric Value")
-		}ElseIf($pass.length -notmatch 5){
+		}
+		ElseIf ($pass.length -notmatch 5) {
 			[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
-		}Else{
+		}
+		Else {
 			New-User $userF $userL $gradYr $pass
 		}
-})
+	})
 
 #On click Browse button, we will browse for the CSV file on the computer
-$browse.Add_Click({
-	$FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
-		InitialDirectory = [Environment]::GetFolderPath('Desktop')
-		Filter = 'CSV File (*.csv)|*.csv'
-	}
-	#$FileBrowserHolder = $FileBrowser.ShowDialog()
-	if ($FileBrowser.ShowDialog()) {
-		$browseTextBox.Text = $FileBrowser.Filename
-		$browseTextBox.Focus()
-		$browseTextBox.Select($browseTextBox.Text.Length, 0)
-	}
-})
+$browse.Add_Click( {
+		$FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+			InitialDirectory = [Environment]::GetFolderPath('Desktop')
+			Filter           = 'CSV File (*.csv)|*.csv'
+		}
+		#$FileBrowserHolder = $FileBrowser.ShowDialog()
+		if ($FileBrowser.ShowDialog()) {
+			$browseTextBox.Text = $FileBrowser.Filename
+			$browseTextBox.Focus()
+			$browseTextBox.Select($browseTextBox.Text.Length, 0)
+		}
+	})
 
 #On click, we will take the CSV and pass it through the New-CSV Fucntion
-$startCSVButton.Add_Click({
+$startCSVButton.Add_Click( {
 		$csvLocation = $browseTextBox.Text
-	If($csvLocation -eq ""){
-		[System.Windows.Messagebox]::Show("Please make sure CSV file has been selected", "ERROR: Missing Values")
-	}Else{
-		New-CSV $csvLocation
-	}
-})
+		If ($csvLocation -eq "") {
+			[System.Windows.Messagebox]::Show("Please make sure CSV file has been selected", "ERROR: Missing Values")
+		}
+		Else {
+			New-CSV $csvLocation
+		}
+	})
 $Win.ShowDialog()
