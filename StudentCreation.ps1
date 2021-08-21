@@ -3,13 +3,14 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 3.4
+# Version   : 3.5
 # Created   : 9/14/2017
 # Modified  :
 # 8/21/2021   - Fix spacing in entire code
 #			  - Fix New-User method to make sure it validatges properly
 #			  - Remove unused code from file
 #			  - Remove CSV Vaidation
+#			  - Add email to CSV file and Export it
 # 8/20/2021   - Add function to Browse Button and add text to browse text box.
 #			  - Add error for empty CSV file.
 # 8/19/2021   - Add Tab menu to select New User or CSV.
@@ -47,7 +48,7 @@ Function Clear-Fields() {
 	$browseTextBox.text = ""
 }
 
-#Function being called from the button add_Click with its variables 
+#Function being called from the create button add_Click with its variables 
 Function New-User($userF, $userL, $gradYr, $pass) {
 	$lowerName = "$userF$userL".ToLower()
 	$SAMAccountname = $lowerName
@@ -89,7 +90,7 @@ Function New-User($userF, $userL, $gradYr, $pass) {
 			OtherAttributes           = @{mailNickname = "$pass" }
 		} 
 		New-ADUser @ADUserArguments
-		
+		#Update results text box and clear the input fields
 		$result.Text += "An account for $fullname has been successfully created:`nU: $email`nP: $pass `n`n"
 		Clear-Fields
 	}
@@ -147,8 +148,13 @@ Function New-CSV($csvLocation) {
 				New-ADUser @ADUserArguments
 				#Add to succesful user creation count
 				$newUsersCreatedCount++
+				#Append email to CSV file
+				$_.EMail = $email
 			}
 		})
+	#Append all changed to CSV
+	$USERS | Export-Csv $csvLocation -NoTypeInformation
+	#Update the results text box with the total accounts created
 	$result.Text += "A total of " + $newUsersCreatedCount + " new user accounts have been created. `n`n"
 	Clear-Fields
 }
@@ -247,7 +253,6 @@ $browse.Add_Click( {
 			InitialDirectory = [Environment]::GetFolderPath('Desktop')
 			Filter           = 'CSV File (*.csv)|*.csv'
 		}
-		#$FileBrowserHolder = $FileBrowser.ShowDialog()
 		if ($FileBrowser.ShowDialog()) {
 			$browseTextBox.Text = $FileBrowser.Filename
 			#Code to make sure the cursor is at the end of the textbox
