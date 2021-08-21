@@ -3,11 +3,13 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 3.2
+# Version   : 3.4
 # Created   : 9/14/2017
 # Modified  :
 # 8/21/2021   - Fix spacing in entire code
 #			  - Fix New-User method to make sure it validatges properly
+#			  - Remove unused code from file
+#			  - Remove CSV Vaidation
 # 8/20/2021   - Add function to Browse Button and add text to browse text box.
 #			  - Add error for empty CSV file.
 # 8/19/2021   - Add Tab menu to select New User or CSV.
@@ -50,9 +52,9 @@ Function New-User($userF, $userL, $gradYr, $pass) {
 	$lowerName = "$userF$userL".ToLower()
 	$SAMAccountname = $lowerName
 	$fullName = "$userF $userL"
-	$email = "$lowerName" + "@<DOMAIN>"
+	$email = "$lowerName" + "@sd104.us"
 	$OUName = "Class of $gradYr"
-	$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
+	$OUPath = "ou=$OUName,ou=Students,dc=SD104,dc=local"
 	$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
 
 	#Checking to see if account and OU exist
@@ -99,24 +101,19 @@ Function New-CSV($csvLocation) {
 	$newUsersCreatedCount = 0
 	#Import CSV File 
 	$USERS = Import-Csv -Path $csvLocation
-	$USERS.foreach{
-		#For each line in the csv, set these variables
-		$userF = $_.FirstName
-		$userL = $_.LastName
-		$gradYr = $_.GraduatingYear
-		$pass = $_.IDNumber
-
-		#Validate the CSV Fields, if an error, stop execution of the CSV upload
-		If (Confirm-CSV $userF $userL $gradYr $pass -eq $False) {
-			break
-		}
-		Else {
+	#Iterate through all the users and create their accounts
+	$USERS.foreach( {
+			#For each line in the csv, set these variables
+			$userF = $_.FirstName
+			$userL = $_.LastName
+			$gradYr = $_.GraduatingYear
+			$pass = $_.IDNumber
 			$lowerName = "$userF$userL".ToLower()
 			$SAMAccountname = $lowerName
 			$fullName = "$userF $userL"
-			$email = "$lowerName" + "@<DOMAIN>"
+			$email = "$lowerName" + "@sd104.us"
 			$OUName = "Class of $gradYr"
-			$OUPath = "ou=$OUName,ou=Students,dc=<DOMAIN>,dc=local"
+			$OUPath = "ou=$OUName,ou=Students,dc=SD104,dc=local"
 			$password = ConvertTo-SecureString -String "$pass" -AsPlainText -force
 
 			#Checking to see if account and OU exist
@@ -151,42 +148,10 @@ Function New-CSV($csvLocation) {
 				#Add to succesful user creation count
 				$newUsersCreatedCount++
 			}
-		}
-	}
+		})
 	$result.Text += "A total of " + $newUsersCreatedCount + " new user accounts have been created. `n`n"
 	Clear-Fields
 }
-
-Function Confirm-CSV($userF, $userL, $gradYr, $pass) {
-	$gradYrValue = $gradYr -as [Double]
-	$gradok = $NULL -ne $gradYrValue
-	$passValue = $pass -as [Double]
-	$passok = $NULL -ne $passValue
-	If ($userF -eq "" -or $userL -eq "" -or $gradYr -eq "" -or $pass -eq "") {
-		[System.Windows.Messagebox]::Show("Please make sure all values are entered correctly", "ERROR: Missing Values")
-		return $False
-	}
-	ElseIf ( -not $gradok) {
-		[System.Windows.Messagebox]::Show("Graduation year must be a numeric value (no letters)", "ERROR: Graduation Numeric Value")
-		return $False
-	}
-	ElseIf ($gradYr.length -notmatch 4) {
-		[System.Windows.Messagebox]::Show("Graduation year must be 4 digits long", "ERROR: Graduation: Four Digit Value")
-		return $False
-	}
-	ElseIf ( -not $passok) {
-		[System.Windows.Messagebox]::Show("ID Number must be a numeric value (no letters)", "ERROR: ID Numeric Value")
-		return $False
-	}
-	ElseIf ($pass.length -notmatch 5) {
-		[System.Windows.Messagebox]::Show("ID number must be 5 digits long", "ERROR: ID: Five Digit Value")
-		return $False
-	}
-	Else {
-		return $True
-	}
-}
-
 
 #xml form was created using Visual Studio and then edited here to my liking. This is the GUI
 [xml]$Form = @"
@@ -285,6 +250,7 @@ $browse.Add_Click( {
 		#$FileBrowserHolder = $FileBrowser.ShowDialog()
 		if ($FileBrowser.ShowDialog()) {
 			$browseTextBox.Text = $FileBrowser.Filename
+			#Code to make sure the cursor is at the end of the textbox
 			$browseTextBox.Focus()
 			$browseTextBox.Select($browseTextBox.Text.Length, 0)
 		}
