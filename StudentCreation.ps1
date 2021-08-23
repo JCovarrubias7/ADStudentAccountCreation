@@ -3,9 +3,10 @@
 # Website : 
 # LinkedIn  : https://www.linkedin.com/in/jorge-e-covarrubias-973217141/
 #
-# Version   : 3.5
+# Version   : 3.6
 # Created   : 9/14/2017
 # Modified  :
+# 8/23/2021   - Update CSV instructions and button text
 # 8/21/2021   - Fix spacing in entire code
 #			  - Fix New-User method to make sure it validatges properly
 #			  - Remove unused code from file
@@ -185,10 +186,10 @@ Function New-CSV($csvLocation) {
 					</TabItem>
 					<TabItem Header="CSV Upload">
 						<Grid Background="#FFE5E5E5">
-							<TextBlock HorizontalAlignment="Left" Height="56" Margin="10,10,0,0" TextAlignment="Center" TextWrapping="Wrap" Text="Select CSV File. &#x0a;Header Row should include: &#x0a;FirstName, LastName, GraduatingYear, IDNumber" VerticalAlignment="Top" Width="304"/>
+							<TextBlock HorizontalAlignment="Left" Height="66" Margin="10,10,0,0" TextAlignment="Center" TextWrapping="Wrap" Text="Select CSV File. Header Row must include: &#x0a;FirstName, LastName, GraduatingYear, IDNumber, Email&#x0a;Email column should be empty. &#x0a;It will be updated after the upload." VerticalAlignment="Top" Width="304"/>
 							<Button Name="BrowseButton" Content="Browse" HorizontalAlignment="Left" Height="25" Margin="10,88,0,0" VerticalAlignment="Top" Width="86"/>
 							<TextBox Name="CSVFileLocation" HorizontalAlignment="Left" Height="25" Margin="101,88,0,0" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="213"/>
-							<Button Name="CSVStartButton" Content="Create CSV Accounts" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304"/>
+							<Button Name="CSVStartButton" Content="Create AD Accounts from CSV" HorizontalAlignment="Left" Height="25" Margin="10,135,0,0" VerticalAlignment="Top" Width="304"/>
 						</Grid>
 					</TabItem>
 				</TabControl>
